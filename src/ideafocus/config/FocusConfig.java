@@ -10,6 +10,10 @@ import com.intellij.openapi.components.Storage;
                @Storage(file = "FocusConfig.xml")
         }
 )
+
+/*
+ *  FocusConfig: sets up the Persistent State of the Focus plugin. Data is stored by an instance of FocusConfig.State
+ */
 public class FocusConfig implements PersistentStateComponent<FocusConfig.State> {
    public static class State {
        public int completedSessionCount;

@@ -21,8 +21,29 @@ import java.awt.event.MouseEvent;
 import java.applet.Applet;
 import java.net.URL;
 
+/*
+ *  FocusWidget contains the main components of the widget including:
+ *    - The text that it needs to display
+ *    - Managing clicking events
+ *    - Ticking down the timer
+ *    - Managing what state the timer is in
+ *
+ *    The persistent data model of the widget is located in ideafocus.config.FocusConfig
+ *    The action button to change the timer is contained in ideafocus.actions.SettingsAction
+ */
 public class FocusWidget implements StatusBarWidget.TextPresentation, ActionListener, StatusBarWidget {
 
+    /*
+     *  The FocusWidget contains a state composed of two variables, it's phase and running condition.
+     *  FocusPlayState:
+     *    DONE    - The previous session has finished (or not begun) and a new one is to be started.
+     *    RUNNING - The timer is ticking down.
+     *    PAUSED  - The timer has been started but is paused
+     *
+     *  FocusPhaseState:
+     *    MAIN    - A focus session has been started. This is the part that actually counts as work
+     *    BREAK   - A 5 minute break has been taken.
+     */
     private enum FocusPlayState {
         DONE, RUNNING, PAUSED
     }
@@ -31,32 +52,32 @@ public class FocusWidget implements StatusBarWidget.TextPresentation, ActionList
         MAIN, BREAK
     }
 
-    private Project project;
-
+    /*
+     *  State information of the widget
+     */
+    // Main state values
     private FocusPlayState myPlayState;
     private FocusPhaseState myPhaseState;
+
+    // Secondary state values
     private Timer timer = new Timer(1000, this);
     private StatusBar statusBar;
-    private long prevClickTime;
-    private int secondsRemaining;
+    private long prevClickTime;     // Stores the time that the previous click was made to check for double-click
+    private int secondsRemaining;   // The amount of seconds before time is up
     private int currentSessionMins; // Stores the value of the session running for case where user changes time min run
 
-
     private FocusConfig focusConfig;
-
     private AudioClip beepClip;
-
     private Consumer<MouseEvent> mouseEventConsumer = new Consumer<MouseEvent>() {
-
         @Override
         public void consume(MouseEvent mouseEvent) {
             long clickTime = getTime();
             if ( (clickTime - prevClickTime) < 200 ) {
-                // Fast Double click occurred
-                // Reset Focus
+                // Fast Double click occurred so reset focus
                 myPlayState = FocusPlayState.DONE;
                 myPhaseState = FocusPhaseState.MAIN;
             } else {
+                // else single click occurred
                 if (myPlayState == FocusPlayState.DONE) {
                     currentSessionMins = focusConfig.getState().focusLength;
                     secondsRemaining = currentSessionMins * 60;
@@ -73,6 +94,9 @@ public class FocusWidget implements StatusBarWidget.TextPresentation, ActionList
         }
     };
 
+    /*
+     *  Constructor: Set up the initial stat of the widget
+     */
     public FocusWidget(Project project) {
         // Set initial state values
         prevClickTime = getTime();
@@ -85,7 +109,6 @@ public class FocusWidget implements StatusBarWidget.TextPresentation, ActionList
         beepClip = Applet.newAudioClip(url);
 
         // Load persistent data
-        this.project = project;
         focusConfig = ServiceManager.getService(project, FocusConfig.class);
 
         // Reset the session count if more than 7 hours has passed
@@ -102,6 +125,9 @@ public class FocusWidget implements StatusBarWidget.TextPresentation, ActionList
     }
 
     @Override
+    /*
+     *  actionPerformed
+     */
     public void actionPerformed(ActionEvent e) {
         if (myPlayState == FocusPlayState.RUNNING) {
             secondsRemaining--;
@@ -131,13 +157,12 @@ public class FocusWidget implements StatusBarWidget.TextPresentation, ActionList
         statusBar.updateWidget(ID());
     }
 
-
-    // Play sound to signify end of focus
+    // playFinishSound simply plays the loaded sound. To be used when timer finishes. In future may add more stuff
     private void playFinishSound() {
         beepClip.play();
     }
 
-    // Function that makes a simple message appear based on the String text
+    // popupAlert makes a simple message appear based on the String text
     private void popupAlert(String text) {
         JBPopupFactory.getInstance().createHtmlTextBalloonBuilder(text, MessageType.INFO, null)
                 .setFadeoutTime(7300)
@@ -147,8 +172,12 @@ public class FocusWidget implements StatusBarWidget.TextPresentation, ActionList
 
     @NotNull
     @Override
+    /*
+     *  getText sets the text (based off of the current state) of the widget.
+     */
     public String getText() {
         if (myPlayState == FocusPlayState.DONE) {
+            // Timer hasn't begun yet
             return "Start Timer";
         } else {
             String retStr = "";
@@ -162,6 +191,9 @@ public class FocusWidget implements StatusBarWidget.TextPresentation, ActionList
         }
     }
 
+    /*
+     * formatSecondsRemaining takes a time and returns the format of it in the format MIN:SEC with appropriate padding
+     */
     private String formatSecondsRemaining(long seconds) {
         long m = seconds / 60;
         long s = seconds % 60;
