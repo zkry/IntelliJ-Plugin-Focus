@@ -1,0 +1,48 @@
+<idea-plugin>
+  <id>com.github.zkry.focus</id>
+  <name>Focus Timer</name>
+  <version>1.1</version>
+  <vendor email="zacromero3@gmail.com" url="http://github.com/zkry">Zachary Romero</vendor>
+
+  <description><![CDATA[
+      A simple timer to help you stay on track<br>
+      Click to start<br>
+      Once started click to pause, click again to start<br>
+      Double click to reset<br>
+      <em>most HTML tags may be used</em>
+    ]]></description>
+
+  <change-notes><![CDATA[
+    Initial version of program
+    ]]>
+  </change-notes>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="145.0"/>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products
+  <depends>com.intellij.modules.lang</depends>
+  -->
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+      <projectService serviceImplementation="ideafocus.config.FocusConfig"/>
+  </extensions>
+
+  <actions>
+    <!-- Add your actions here -->
+      <action id="com.zkry.focus.settings" class="ideafocus.actions.SettingsAction" text="Focus Settings"
+              description="Modify the session length">
+          <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="ToolsBasicGroup"/>
+      </action>
+  </actions>
+
+  <project-components>
+    <component>
+      <implementation-class>ideafocus.FocusPluginRegistration</implementation-class>
+    </component>
+  </project-components>
+
+</idea-plugin>
